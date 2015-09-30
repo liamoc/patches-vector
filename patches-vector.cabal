@@ -20,6 +20,10 @@ category:            Data
 build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
+homepage:            https://github.com/liamoc/patches-vector
+source-repository head
+  type:     git
+  location: https://github.com/liamoc/patches-vector
 
 library
   exposed-modules:     Data.Patch
