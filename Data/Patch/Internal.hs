@@ -182,7 +182,7 @@ instance Eq a => Monoid (Patch a) where
 
 -- | Apply a patch to a document.
 --
--- Technically, 'apply' is a _monoid morphism_ to the monoid of endomorphisms @Vector a -> Vector a@,
+-- Technically, 'apply' is a /monoid morphism/ to the monoid of endomorphisms @Vector a -> Vector a@,
 -- and that's how we can derive the following two laws:
 --
 -- prop> forAll (historyFrom d 2) $ \[a, b] -> apply b (apply a d) == apply (a <> b) d
