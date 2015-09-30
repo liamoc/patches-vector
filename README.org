@@ -1,0 +1,18 @@
+* Patches for Vectors
+
+A /patch/ is a collection of modifications (/edits/) to be made to a sequence of elements. Commonly
+found in version control systems, patches are also a simple example of a group, supporting composition
+and inversion.
+                     
+This library provides a pleasant interface for working with patches to vectors with any type of element.
+It includes patch composition, inversion, and application, as well as a way to compute a patch between
+two vectors using the Wagner-Fischer algorithm.
+
+This library is extensively covered by a comprehensive suite of
+QuickCheck properties, which are written into the documentation and
+run with ~doctest~.
+
+The actual package only depends on ~base~, ~microlens~, ~vector~ and
+a small library for doing Wagner-Fischer, [[/thsutton/edit-distance-vector]].
+
+It is released under the BSD3 license.
