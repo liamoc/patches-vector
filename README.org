@@ -1,3 +1,4 @@
+https://travis-ci.org/liamoc/patches-vector.svg
 * Patches for Vectors
 
 A /patch/ is a collection of modifications (/edits/) to be made to a sequence of elements. Commonly
