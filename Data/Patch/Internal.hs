@@ -62,10 +62,10 @@ import Data.Function
 --
 -- The indices of the 'Edit' s are all based on the /original document/, so:
 --
--- >>> apply (fromList [Insert 0 'a', Insert 1 'b']) (Vector.fromList "123")
+-- >>> Vector.toList $ apply (fromList [Insert 0 'a', Insert 1 'b']) (Vector.fromList "123")
 -- "a1b23"
 --
--- >>> apply (fromList [Insert 0 'a', Insert 0 'b']) (Vector.fromList "123")
+-- >>> Vector.toList $ apply (fromList [Insert 0 'a', Insert 0 'b']) (Vector.fromList "123")
 -- "ab123"
 --
 -- Note that the first 'Insert' didn't introduce an offset for the second.
