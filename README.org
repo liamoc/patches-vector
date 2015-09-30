@@ -13,6 +13,6 @@ QuickCheck properties, which are written into the documentation and
 run with ~doctest~.
 
 The actual package only depends on ~base~, ~microlens~, ~vector~ and
-a small library for doing Wagner-Fischer, [[/thsutton/edit-distance-vector]].
+a small library for doing Wagner-Fischer, [[https://github.com/thsutton/edit-distance-vector][thsutton/edit-distance-vector]].
 
 It is released under the BSD3 license.
