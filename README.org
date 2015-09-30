@@ -19,3 +19,26 @@ The actual package only depends on ~base~, ~microlens~, ~vector~ and
 a small library for doing Wagner-Fischer, [[https://github.com/thsutton/edit-distance-vector][thsutton/edit-distance-vector]].
 
 It is released under the BSD3 license.
+
+* Building, Installing
+
+~patches-vector~ is released on Hackage and is available in the usual way:
+
+#+BEGIN_EXAMPLE
+  $ cabal update
+  $ cabal install patches-vector
+#+END_EXAMPLE
+
+* Using
+
+The full Haddock documentation is available [[http://hackage.haskell.org/package/patches-vector][on Hackage]]. Mostly, construct patches using ~fromList~ or ~diff~, compose them with the ~Monoid~ instance, invert them with ~inverse~, 
+and apply them to a vector with ~apply~.
+
+* Future work
+
+- Adding a basic ~sdiff~-style renderer given the original document.
+- Adding [[https://en.wikipedia.org/wiki/Operational_transformation][operational transforms]] to allow basic merging algorithms.
+
+* Other notes
+
+This library is designed to be used with my ~composition-tree~ library, which, along with this library gives you a basic version control system for vectors. Pretty neat!
