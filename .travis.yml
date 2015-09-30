@@ -11,6 +11,7 @@ env:
 # - CABALVER=1.18 GHCVER=7.6.3
  - CABALVER=1.18 GHCVER=7.8.3
  - CABALVER=1.22 GHCVER=7.10.1
+ - CABALVER=1.22 GHCVER=7.10.2 STACKAGESNAPSHOT=lts-3.6
 
 before_install:
  # If $GHCVER is the one travis has, don't bother reinstalling it.
@@ -31,6 +32,7 @@ install:
  - cabal --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
  - travis_retry cabal update
+ - if [ -n "STACKAGESNAPSHOT" ]; then curl --silent https://www.stackage.org/$STACKAGESNAPSHOT/cabal.config | grep -v 'patches-vector ==' > cabal.config; fi
  - cabal install --only-dependencies --enable-tests --enable-benchmarks
 
 # Here starts the actual work to be performed for the package under test; any
