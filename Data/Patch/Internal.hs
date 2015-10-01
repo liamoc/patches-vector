@@ -27,6 +27,8 @@ import Data.Function
 --   patchesFrom' _ | otherwise           = fromList <$> listOf (Insert 0 <$> arbitrary)
 --   patchesFrom :: Vector Int -> Gen (Patch Int)
 --   patchesFrom = patchesFrom'
+--   divergingPatchesFrom :: Vector Int -> Gen (Patch Int, Patch Int)
+--   divergingPatchesFrom v = (,) <$> patchesFrom v <*> patchesFrom v
 --   historyFrom d 0 = return []
 --   historyFrom d m = do
 --     p <- patchesFrom d
@@ -152,7 +154,8 @@ normalise grp = let (inserts, deletes, replaces) = partition3 grp
 
         normalise' (Insert _ x:is) (Delete i y:ds) rs = normalise' is ds (Replace i y x : rs)
         normalise' is [] rs = is ++ take 1 rs
-        normalise' [] (d:ds) _  = [d]
+        normalise' [] (d:_) _  = [d]
+        normalise' _ _ _ = error "Impossible!"
 
 instance Eq a => Monoid (Patch a) where
   mempty = Patch []
@@ -177,7 +180,7 @@ instance Eq a => Monoid (Patch a) where
       offset (Insert {}) = -1
       offset (Delete {}) = 1
       offset (Replace {}) = 0
-      replace i o n | o == n = id
+      replace _ o n | o == n = id
       replace i o n | otherwise = (Replace i o n :)
 
 -- | Apply a patch to a document.
@@ -211,6 +214,68 @@ apply (Patch s) i = Vector.concat $ go s [i] 0
                                    | otherwise           = let (p1,p2) = splitVectorListAt (j - Vector.length v) vs
                                                             in (v:p1, p2)
 
+
+
+-- | Given two diverging patches @p@ and @q@, @transform m p q@ returns
+--   a pair of updated patches @(p',q')@ such that @q <> p'@ and
+--   @p <> q'@ are equivalent patches that incorporate the changes
+--   of /both/ @p@ and @q@, up to merge conflicts, which are handled by
+--   the provided function @m@.
+--
+--   This is the standard @transform@ function of Operational Transformation
+--   patch resolution techniques.
+--
+--   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith ours p q in apply (p <> q') d == apply (q <> p') d
+--
+--   This function is commutative iff @m@ is commutative.
+--
+--   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith (*) p q; (q'', p'') = transformWith (*) q p in p' == p'' && q' == q''
+--
+--   Some example conflict strategies are provided below.
+transformWith :: (Eq a) => (a -> a -> a) -> Patch a -> Patch a -> (Patch a, Patch a)
+transformWith conflict (Patch p) (Patch q)
+  = let (a', b') = go p 0 q 0
+    in  (Patch a', Patch b')
+  where
+    go [] _ [] _ = ([],[])
+    go xs a [] _ = (map (over index (+ a)) xs, [])
+    go [] _ ys b = ([], map (over index (+ b)) ys)
+    go (x:xs) a (y:ys) b = 
+      case comparing (^. index) x y of
+        LT -> over _1 (over index (+ a) x:) $ go xs a (y:ys) (b + offset x)
+        GT -> over _2 (over index (+ b) y:) $ go (x:xs) (a + offset y) ys b
+        EQ -> case (x, y) of
+           _ | x == y -> go xs (a + offset y) ys (b + offset x)
+           (Insert i nx, Insert _ ny ) 
+             -> let n = conflict nx ny
+                 in cons2 (Replace (i + a) ny n, Replace (i + b) nx n)
+                          (go xs (a + offset y) ys (b + offset x))
+           (Replace i _ nx, Replace _ _ ny)
+             -> let n = conflict nx ny
+                 in cons2 (Replace (i + a) ny n, Replace (i + b) nx n)
+                          (go xs a ys b)
+           (Insert {}, _) -> over _1 (over index (+ a) x:) $ go xs a (y:ys) (b + offset x)
+           (_, Insert {}) -> over _2 (over index (+ b) y:) $ go (x:xs) (a + offset y) ys b
+           (Replace {}, Delete  {}) -> over _2 (over index (+ b) y:) $ go xs (a + offset y) ys b
+           (Delete  {}, Replace {}) -> over _1 (over index (+ a) x:) $ go xs a ys (b + offset x)
+           (Delete  {}, Delete  {}) -> go xs (a + offset y) ys (b + offset x)
+    offset (Insert {})  =  1
+    offset (Delete {})  = -1
+    offset (Replace {}) =  0
+    cons2 (x,y) (xs, ys) = (x:xs, y:ys)
+
+-- | Resolve a conflict by always using the left-hand side
+ours :: a -> a -> a
+ours = const
+
+-- | Resolve a conflict by always using the right-hand side
+theirs :: a -> a -> a
+theirs = const
+
+-- | A convenience version of 'transformWith' which resolves conflicts using 'mappend'.
+transform :: (Eq a, Monoid a) => Patch a -> Patch a -> (Patch a, Patch a)
+transform = transformWith (<>)
+
 -- | Compute the difference between two documents, using the Wagner-Fischer algorithm. O(mn) time and space.
 --
 -- prop> apply (diff d e) d == e
@@ -237,3 +302,4 @@ diff v1 v2 = let (_ , s) = leastChanges params v1 v2
                                                Delete {} -> 0
                                                _         -> 1
                     }
+
