@@ -11,6 +11,10 @@ This library provides a pleasant interface for working with patches to vectors w
 It includes patch composition, inversion, and application, as well as a way to compute a patch between
 two vectors using the Wagner-Fischer algorithm.
 
+It also includes a simple implementation of the [[https://en.wikipedia.org/wiki/Operational_transformation][operational transformation]] (OT) 
+function to resolve diverging patches from the same document. This allows for reasonably painless 
+implementation of merge functions, as well as many applications in distributed editing of documents.
+
 This library is extensively covered by a comprehensive suite of
 QuickCheck properties, which are written into the documentation and
 run with ~doctest~.
@@ -34,10 +38,12 @@ It is released under the BSD3 license.
 The full Haddock documentation is available [[http://hackage.haskell.org/package/patches-vector][on Hackage]]. Mostly, construct patches using ~fromList~ or ~diff~, compose them with the ~Monoid~ instance, invert them with ~inverse~, 
 and apply them to a vector with ~apply~.
 
+The ~transform~ function can be used to resolve diverging patches, and ~transformWith~ lets you select a merging strategy, such as ~ours~ or ~theirs~, rather than the default
+~mappend~. See the Haddock documentation for more information.
+
 ** Future work
 
 - Adding a basic ~sdiff~-style renderer given the original document.
-- Adding [[https://en.wikipedia.org/wiki/Operational_transformation][operational transforms]] to allow basic merging algorithms.
 
 ** Other notes
 
