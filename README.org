@@ -1,5 +1,5 @@
 
-[[https://travis-ci.org/liamoc/patches-vector][file:https://travis-ci.org/liamoc/patches-vector.svg]] [[hackage.haskell.org/package/patches-vector][file:https://img.shields.io/hackage/v/patches-vector.svg]] [[http://packdeps.haskellers.com/reverse/patches-vector][file:https://img.shields.io/hackage-deps/v/patches-vector.svg]] [[http://haskell.org][file:https://img.shields.io/badge/language-Haskell-blue.svg]] [[https://github.com/liamoc/patches-vector/blob/master/LICENSE][file:http://img.shields.io/badge/license-BSD3-brightgreen.svg]]
+[[https://travis-ci.org/liamoc/patches-vector][file:https://travis-ci.org/liamoc/patches-vector.svg]] [[http://hackage.haskell.org/package/patches-vector][file:https://img.shields.io/hackage/v/patches-vector.svg]] [[http://packdeps.haskellers.com/reverse/patches-vector][file:https://img.shields.io/hackage-deps/v/patches-vector.svg]] [[http://haskell.org][file:https://img.shields.io/badge/language-Haskell-blue.svg]] [[https://github.com/liamoc/patches-vector/blob/master/LICENSE][file:http://img.shields.io/badge/license-BSD3-brightgreen.svg]]
 
 * Patches for Vectors
 
