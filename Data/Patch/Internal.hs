@@ -231,6 +231,9 @@ apply (Patch s) i = Vector.concat $ go s [i] 0
 --
 --   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith (*) p q; (q'', p'') = transformWith (*) q p in p' == p'' && q' == q''
 --
+--   prop> forAll (patchesFrom d) $ \ p -> transformWith (*) mempty p == (mempty, p)
+--   prop> forAll (patchesFrom d) $ \ p -> transformWith (*) p mempty == (p, mempty)
+--
 --   Some example conflict strategies are provided below.
 transformWith :: (Eq a) => (a -> a -> a) -> Patch a -> Patch a -> (Patch a, Patch a)
 transformWith conflict (Patch p) (Patch q)
