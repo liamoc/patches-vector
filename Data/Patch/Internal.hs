@@ -259,8 +259,10 @@ transformWith conflict (Patch p) (Patch q)
                           (go xs a ys b)
            (Insert {}, _) -> over _1 (over index (+ a) x:) $ go xs a (y:ys) (b + offset x)
            (_, Insert {}) -> over _2 (over index (+ b) y:) $ go (x:xs) (a + offset y) ys b
-           (Replace {}, Delete  {}) -> over _2 (over index (+ b) y:) $ go xs (a + offset y) ys b
-           (Delete  {}, Replace {}) -> over _1 (over index (+ a) x:) $ go xs a ys (b + offset x)
+           (Replace i _ nx, Delete  {})
+             -> over _2 (over index (+ b) (Delete i nx):) $ go xs (a + offset y) ys b
+           (Delete  {}, Replace i _ ny)
+             -> over _1 (over index (+ a) (Delete i ny):) $ go xs a ys (b + offset x)
            (Delete  {}, Delete  {}) -> go xs (a + offset y) ys (b + offset x)
     offset (Insert {})  =  1
     offset (Delete {})  = -1
