@@ -41,9 +41,11 @@ and apply them to a vector with ~apply~.
 The ~transform~ function can be used to resolve diverging patches, and ~transformWith~ lets you select a merging strategy, such as ~ours~ or ~theirs~, rather than the default
 ~mappend~. See the Haddock documentation for more information.
 
+The ~hunks~ function can be used with a patch and a vector to provide a list of change hunks, that are convenient for other tools or for displaying to the user.
+
 ** Future work
 
-- Adding a basic ~sdiff~-style renderer given the original document.
+- More elaborate merge strategies that allow you to emulate insert/delete style patches.
 
 ** Other notes
 
