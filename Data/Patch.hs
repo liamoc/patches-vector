@@ -21,6 +21,10 @@ module Data.Patch
        , index
        , old
        , new
+         -- * Viewing Patches and Hunks
+       , Hunks
+       , HunkStatus (..)
+       , hunks
        )
        where
 

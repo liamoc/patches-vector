@@ -308,3 +308,30 @@ diff v1 v2 = let (_ , s) = leastChanges params v1 v2
                                                _         -> 1
                     }
 
+
+
+-- | The four different ways a hunk may have been manipulated.
+data HunkStatus = Inserted | Deleted | Replaced | Unchanged deriving (Eq, Show, Read)
+
+-- | The type for a series of hunks; a patch as it may be displayed to a user.
+type Hunks a = [(Vector a, HunkStatus)]
+
+-- | Render a patch on a document as a list of change hunks. Good for displaying
+--   a patch to a user.
+--
+--   prop> forAll (patchesFrom d) $ \p -> Vector.concat (map fst (filter ((/= Deleted) . snd) (hunks p d))) == apply p d
+hunks :: Patch a -> Vector a -> Hunks a
+hunks (Patch s) i = map eachGroup $ List.groupBy ((==) `on` snd) $ go s i 0
+  where go [] v _ | Vector.null v = []
+                  | otherwise     = [(v, Unchanged)]
+        go (a : as) v x
+          | x' <- a ^. index
+          = let (prefix, rest) = Vector.splitAt (x' - x) v
+                hunk (Insert _ c) = (Vector.singleton c, Inserted)
+                hunk (Replace _ _ c) = (Vector.singleton c, Replaced)
+                hunk (Delete _ c) = (Vector.singleton c, Deleted)
+                offset (Insert {}) = 0
+                offset _ = 1
+             in (if x' > x then ((prefix,Unchanged) :) else id) $ hunk a : go as (Vector.drop (offset a) rest) (x' + offset a)
+        eachGroup r@((_,st):_) = (Vector.concat (map fst r), st)
+        eachGroup [] = error "impossible!"
