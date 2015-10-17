@@ -32,7 +32,7 @@ install:
  - cabal --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
  - travis_retry cabal update
- - if [ -n "STACKAGESNAPSHOT" ]; then curl --silent https://www.stackage.org/$STACKAGESNAPSHOT/cabal.config | grep -v 'patches-vector ==' > cabal.config; fi
+ - if [ -n "STACKAGESNAPSHOT" ]; then curl -L --silent https://www.stackage.org/$STACKAGESNAPSHOT/cabal.config | grep -v 'patches-vector ==' > cabal.config; fi
  - cabal install --only-dependencies --enable-tests --enable-benchmarks
 
 # Here starts the actual work to be performed for the package under test; any
