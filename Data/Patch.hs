@@ -15,6 +15,7 @@ module Data.Patch
        , theirs
          -- * Documents
        , apply
+       , applicable
        , diff
          -- * Edits
        , Edit (..)

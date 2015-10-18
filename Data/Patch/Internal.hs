@@ -98,6 +98,8 @@ data Edit a = Insert  Int a -- ^ @Insert i x@ inserts the element @x@ at positio
 -- prop> forAll (historyFrom d 2) $ \[p, q] -> inverse (p <> q) == inverse q <> inverse p
 --
 -- prop> forAll (patchesFrom d) $ \p -> inverse mempty == mempty
+--
+-- prop> forAll (patchesFrom d) $ \p -> applicable (inverse p) (apply p d)
 inverse :: Patch a -> Patch a
 inverse (Patch ls) = Patch $ snd $ List.mapAccumL go 0 ls
   where
@@ -183,6 +185,24 @@ instance Eq a => Monoid (Patch a) where
       replace _ o n | o == n = id
       replace i o n | otherwise = (Replace i o n :)
 
+-- | Returns true if a patch can be safely applied to a document, that is,
+--   @applicable p d@ holds when @d@ is a valid source document for the patch @p@.
+--
+-- prop> applicable mempty d
+-- prop> forAll (patchesFrom d) $ \p -> applicable p d
+-- prop> forAll (historyFrom d 2) $ \[p, q] -> applicable p d && applicable q (apply p d)
+-- prop> forAll (historyFrom d 2) $ \[p, q] -> applicable (p <> q) d
+applicable :: (Eq a) => Patch a -> Vector a -> Bool
+applicable (Patch s) i = all applicable' s
+  where
+    applicable' (Insert x _)     = x <= Vector.length i
+    applicable' (Delete x c)     = case i Vector.!? x of
+                                    Just c' | c == c' -> True
+                                    _ -> False
+    applicable' (Replace x c _)  = case i Vector.!? x of
+                                    Just c' | c == c' -> True
+                                    _ -> False
+
 -- | Apply a patch to a document.
 --
 -- Technically, 'apply' is a /monoid morphism/ to the monoid of endomorphisms @Vector a -> Vector a@,
@@ -226,6 +246,7 @@ apply (Patch s) i = Vector.concat $ go s [i] 0
 --   patch resolution techniques.
 --
 --   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith ours p q in apply (p <> q') d == apply (q <> p') d
+--   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith ours p q in applicable p' (apply q d) && applicable q' (apply p d)
 --
 --   This function is commutative iff @m@ is commutative.
 --
@@ -233,7 +254,6 @@ apply (Patch s) i = Vector.concat $ go s [i] 0
 --
 --   prop> forAll (patchesFrom d) $ \ p -> transformWith (*) mempty p == (mempty, p)
 --   prop> forAll (patchesFrom d) $ \ p -> transformWith (*) p mempty == (p, mempty)
---
 --   Some example conflict strategies are provided below.
 transformWith :: (Eq a) => (a -> a -> a) -> Patch a -> Patch a -> (Patch a, Patch a)
 transformWith conflict (Patch p) (Patch q)
@@ -288,6 +308,8 @@ transform = transformWith (<>)
 -- prop> apply (diff d e) d == apply (inverse (diff e d)) d
 --
 -- prop> apply (diff a b <> diff b c) a == apply (diff a c) a
+--
+-- prop> applicable (diff a b) a
 --
 diff :: Eq a => Vector a -> Vector a -> Patch a
 diff v1 v2 = let (_ , s) = leastChanges params v1 v2
