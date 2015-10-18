@@ -100,6 +100,10 @@ data Edit a = Insert  Int a -- ^ @Insert i x@ inserts the element @x@ at positio
 -- prop> forAll (patchesFrom d) $ \p -> inverse mempty == mempty
 --
 -- prop> forAll (patchesFrom d) $ \p -> applicable (inverse p) (apply p d)
+--
+-- prop> forAll (patchesFrom d) $ \p -> composable p (inverse p)
+--
+-- prop> forAll (patchesFrom d) $ \p -> composable (inverse p) p
 inverse :: Patch a -> Patch a
 inverse (Patch ls) = Patch $ snd $ List.mapAccumL go 0 ls
   where
@@ -203,6 +207,34 @@ applicable (Patch s) i = all applicable' s
                                     Just c' | c == c' -> True
                                     _ -> False
 
+-- | Returns true if a patch can be validly composed with another.
+--   That is, @composable p q@ holds if @q@ can be validly applied after @p@.
+--
+--   prop> forAll (patchesFrom d) $ \p -> composable mempty p
+--   prop> forAll (patchesFrom d) $ \p -> composable p mempty
+--   prop> forAll (historyFrom d 2) $ \[p, q] -> composable p q
+composable :: Eq a => Patch a -> Patch a -> Bool
+composable (Patch a) (Patch b) = go a b (0 :: Int)
+    where
+      go [] _ _  = True
+      go _ [] _    = True
+      go (x:xs) (y:ys) off = let
+          y' = over index (+ off) y
+        in case comparing (^. index) x y' of
+         LT -> go xs (y:ys) (off + offset x)
+         GT -> go (x:xs) ys off
+         EQ -> case (x,y') of
+             (Delete {}, Insert {}) -> go xs ys (off + offset x)
+             (Delete {}, _) -> go xs (y:ys) (off + offset x)
+             (_, Insert {}) -> go (x:xs) ys off
+             (Replace _ _ o, Replace _ n _) -> o == n && go xs ys off
+             (Replace _ _ o, Delete _ n) -> o == n && go xs ys off
+             (Insert _ o, Replace _ n _) -> o == n && go xs ys (off + offset x)
+             (Insert _ o, Delete _ n) -> o == n && go xs ys (off + offset x)
+      offset (Insert {}) = -1
+      offset (Delete {}) = 1
+      offset (Replace {}) = 0
+
 -- | Apply a patch to a document.
 --
 -- Technically, 'apply' is a /monoid morphism/ to the monoid of endomorphisms @Vector a -> Vector a@,
@@ -247,6 +279,7 @@ apply (Patch s) i = Vector.concat $ go s [i] 0
 --
 --   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith ours p q in apply (p <> q') d == apply (q <> p') d
 --   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith ours p q in applicable p' (apply q d) && applicable q' (apply p d)
+--   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith ours p q in composable p q' && composable q p'
 --
 --   This function is commutative iff @m@ is commutative.
 --
@@ -310,7 +343,6 @@ transform = transformWith (<>)
 -- prop> apply (diff a b <> diff b c) a == apply (diff a c) a
 --
 -- prop> applicable (diff a b) a
---
 diff :: Eq a => Vector a -> Vector a -> Patch a
 diff v1 v2 = let (_ , s) = leastChanges params v1 v2
               in unsafeFromList $ adjust 0 $ s

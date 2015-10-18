@@ -7,16 +7,17 @@ module Data.Patch
        , fromList
        , unsafeFromList
        , inverse
+       , composable
+         -- * Documents
+       , apply
+       , applicable
+       , diff
          -- ** Transformations and merges
        , transformWith
          -- *** Conflict strategies
        , transform
        , ours
        , theirs
-         -- * Documents
-       , apply
-       , applicable
-       , diff
          -- * Edits
        , Edit (..)
        , index
