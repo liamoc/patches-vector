@@ -39,6 +39,8 @@ You can also use ~stack~ if you prefer:
   $ stack install patches-vector
 #+END_EXAMPLE
 
+A variety of ~stack-*.yaml~ files are provided in this repository for various LTS snapshots.
+
 ** Using
 
 The full Haddock documentation is available [[http://hackage.haskell.org/package/patches-vector][on Hackage]]. Mostly, construct patches using ~fromList~ or ~diff~, compose them with the ~Monoid~ instance, invert them with ~inverse~, 
