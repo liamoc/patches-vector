@@ -33,6 +33,12 @@ It is released under the BSD3 license.
   $ cabal install patches-vector
 #+END_EXAMPLE
 
+You can also use ~stack~ if you prefer:
+
+#+BEGIN_EXAMPLE
+  $ stack install patches-vector
+#+END_EXAMPLE
+
 ** Using
 
 The full Haddock documentation is available [[http://hackage.haskell.org/package/patches-vector][on Hackage]]. Mostly, construct patches using ~fromList~ or ~diff~, compose them with the ~Monoid~ instance, invert them with ~inverse~, 
