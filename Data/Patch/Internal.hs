@@ -50,11 +50,16 @@ import Data.Function
 --   of 'Edit', and can be converted to and from raw lists of edits using 'toList' and 'fromList'
 --   respectively.
 --
---   Patches form a group (a 'Monoid' with inverses), where the inverse element can be computed with
---   'inverse' and the group operation is /composition/ of patches. Applying @p1 <> p2@ is the
---   same as applying @p1@ /then/ @p2@ (see 'apply'). This composition operator may produce structurally
+--   Patches form a groupoid (a 'Monoid' with inverses, and a partial composition relation), 
+--   where the inverse element can be computed with 'inverse' and the groupoid operation
+--   is /composition/ of patches. Applying @p1 <> p2@ is the same as applying @p1@ /then/
+--   @p2@ (see 'apply'). This composition operator may produce structurally
 --   different patches depending on associativity, however the patches are guaranteed to be /equivalent/
 --   in the sense that the resultant document will be the same when they are applied.
+--
+--   For convenience, we make our composition operator here total, to fit the `Monoid` typeclass,
+--   but provide some predicates ('composable' and 'applicable') to determine if the operation
+--   can be validly used.
 --
 -- prop> forAll (patchesFrom d) $ \a -> a <> mempty == a
 --
