@@ -280,7 +280,9 @@ apply (Patch s) i = Vector.concat $ go s [i] 0
 --   the provided function @m@.
 --
 --   This is the standard @transform@ function of Operational Transformation
---   patch resolution techniques.
+--   patch resolution techniques, and can be thought of as the mapping
+--   for morphisms in a groupoid /fibration/ from a present version
+--   to a past version.
 --
 --   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith ours p q in apply (p <> q') d == apply (q <> p') d
 --   prop> forAll (divergingPatchesFrom d) $ \(p,q) -> let (p', q') = transformWith ours p q in applicable p' (apply q d) && applicable q' (apply p d)
