@@ -14,8 +14,8 @@ two vectors using the Wagner-Fischer algorithm.
 It also includes a simple implementation of the [[https://en.wikipedia.org/wiki/Operational_transformation][operational transformation]] (OT) 
 function to resolve diverging patches from the same document. This allows for reasonably painless 
 implementation of merge functions, as well as many applications in distributed editing of documents. This
-operation also has an interpretation in terms of groupoids, where the transform function is essentially a pair of 
-/fibrations/ from the present history to the past.
+operation also has an interpretation in terms of groupoids, where the transform function is the [[https://en.wikipedia.org/wiki/Pushout_(category_theory)][pushout]] of two
+diverging patches.
 
 This library is extensively covered by a comprehensive suite of
 QuickCheck properties, which are written into the documentation and
