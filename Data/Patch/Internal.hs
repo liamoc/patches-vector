@@ -344,6 +344,8 @@ transform = transformWith (<>)
 --
 -- prop> apply (diff d e) d == e
 --
+-- prop> diff d d == mempty
+--
 -- prop> apply (diff d e) d == apply (inverse (diff e d)) d
 --
 -- prop> apply (diff a b <> diff b c) a == apply (diff a c) a
