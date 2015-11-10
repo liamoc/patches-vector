@@ -330,11 +330,11 @@ transformWith conflict (Patch p) (Patch q)
 
 -- | Resolve a conflict by always using the left-hand side
 ours :: a -> a -> a
-ours = flip const
+ours = const
 
 -- | Resolve a conflict by always using the right-hand side
 theirs :: a -> a -> a
-theirs = const
+theirs = flip const
 
 -- | A convenience version of 'transformWith' which resolves conflicts using 'mappend'.
 transform :: (Eq a, Monoid a) => Patch a -> Patch a -> (Patch a, Patch a)
