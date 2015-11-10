@@ -330,7 +330,7 @@ transformWith conflict (Patch p) (Patch q)
 
 -- | Resolve a conflict by always using the left-hand side
 ours :: a -> a -> a
-ours = const
+ours = flip const
 
 -- | Resolve a conflict by always using the right-hand side
 theirs :: a -> a -> a
