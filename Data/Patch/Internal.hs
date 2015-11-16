@@ -5,11 +5,14 @@ import Data.Monoid
 import Data.Ord
 import qualified Data.List as List
 import qualified Data.Vector as Vector
+import qualified Data.Vector.Mutable as MVector
+import qualified Data.Vector.Generic as GVector
 import Data.Vector (Vector)
 import Data.Vector.Distance
 import Lens.Micro
 import Control.Applicative
 import Data.Function
+import Control.Monad.ST
 -- $setup
 -- >>> import Test.QuickCheck
 -- >>> :{
@@ -152,7 +155,7 @@ unsafeFromList = Patch
 
 -- | Convert a list of edits to a patch, making sure to eliminate conflicting edits and sorting by index.
 fromList :: Eq a => [Edit a] -> Patch a
-fromList = Patch . concat . map normalise . List.groupBy ((==) `on` (^. index)) . List.sortBy (comparing (^. index))
+fromList = Patch . concatMap normalise . List.groupBy ((==) `on` (^. index)) . List.sortBy (comparing (^. index))
 
 -- | Internal: Eliminate conflicting edits
 normalise :: [Edit a] -> [Edit a]
@@ -240,6 +243,15 @@ composable (Patch a) (Patch b) = go a b (0 :: Int)
       offset (Delete {}) = 1
       offset (Replace {}) = 0
 
+
+-- | Returns the delta of the document's size when a patch is applied.
+--   Essentially the number of @Insert@ minus the number of @Delete@.
+sizeChange :: Patch a -> Int
+sizeChange (Patch s) = foldr (\c d -> d + offset c) 0 s
+  where offset (Delete {}) = -1
+        offset (Insert {}) = 1
+        offset _           = 0
+
 -- | Apply a patch to a document.
 --
 -- Technically, 'apply' is a /monoid morphism/ to the monoid of endomorphisms @Vector a -> Vector a@,
@@ -250,27 +262,28 @@ composable (Patch a) (Patch b) = go a b (0 :: Int)
 -- prop> apply mempty d == d
 --
 apply :: Patch a -> Vector a -> Vector a
-apply (Patch s) i = Vector.concat $ go s [i] 0
-  where go [] v _ = v
-        go (a : as) v x
-          | x' <- a ^. index
-          = let (prefix, rest)
-                  | x' > x    = splitVectorListAt (x' - x) v
-                  | otherwise = ([], v)
-                conclusion (Insert  _   e) = Vector.singleton e : go as rest x'
-                conclusion (Delete  _   _) = go as (drop1 rest) (x' + 1)
-                conclusion (Replace _ _ e) = go as (Vector.singleton e : drop1 rest) (x')
-             in prefix ++ conclusion a
-        drop1 :: [Vector a] -> [Vector a] 
-        drop1 [] = []
-        drop1 (v:vs) | Vector.length v > 0 = Vector.drop 1 v : vs
-        drop1 (_:vs) | otherwise           = drop1 vs
-        splitVectorListAt :: Int -> [Vector a] -> ([Vector a], [Vector a])
-        splitVectorListAt _ [] = ([],[])
-        splitVectorListAt j (v:vs) | j < Vector.length v = let (v1,v2) = Vector.splitAt j v in ([v1],v2:vs)
-                                   | otherwise           = let (p1,p2) = splitVectorListAt (j - Vector.length v) vs
-                                                            in (v:p1, p2)
-
+apply p@(Patch s) i = Vector.create (MVector.unsafeNew dlength >>= \d -> go s i d 0 >> return d)
+  where
+    dlength = Vector.length i + sizeChange p
+    go :: [Edit a] -> Vector a -> MVector.STVector s a -> Int -> ST s ()
+    go [] src dest _
+      | MVector.length dest > 0 = GVector.unsafeCopy dest src
+      | otherwise               = return ()
+    go (a : as) src dest si
+      | y <- a ^. index
+      , x <- y - si
+      , x > 0
+      = do GVector.unsafeCopy (MVector.take x dest) (Vector.take x src)
+           go (a : as) (Vector.drop x src) (MVector.drop x dest) (si + x)
+    go (a : as) src dest si = case a of
+      Insert _ c -> do
+        MVector.unsafeWrite dest 0 c
+        go as src (MVector.unsafeTail dest) si
+      Delete _ _ ->
+        go as (Vector.unsafeTail src) dest (si + 1)
+      Replace _ _ c' -> do
+        MVector.unsafeWrite dest 0 c'
+        go as (Vector.unsafeTail src) (MVector.unsafeTail dest) (si + 1)
 
 
 -- | Given two diverging patches @p@ and @q@, @transform m p q@ returns
@@ -353,7 +366,7 @@ transform = transformWith (<>)
 -- prop> applicable (diff a b) a
 diff :: Eq a => Vector a -> Vector a -> Patch a
 diff v1 v2 = let (_ , s) = leastChanges params v1 v2
-              in unsafeFromList $ adjust 0 $ s
+              in unsafeFromList $ adjust 0 s
   where
     adjust _ [] = []
     adjust !o (Insert i x:rest) = Insert (i+o) x : adjust (o-1) rest
@@ -361,10 +374,10 @@ diff v1 v2 = let (_ , s) = leastChanges params v1 v2
     adjust !o (Replace i x x':rest) = Replace (i+o) x x' : adjust o rest
     params :: Eq a => Params a (Edit a) (Sum Int)
     params = Params { equivalent     = (==)
-                    , delete         = \i c    -> Delete  i c
-                    , insert         = \i c    -> Insert  i c
-                    , substitute     = \i c c' -> Replace i c c'
-                    , cost           = \_      -> Sum 1
+                    , delete         = Delete
+                    , insert         = Insert
+                    , substitute     = Replace
+                    , cost           = const $ Sum 1
                     , positionOffset = \x -> case x of
                                                Delete {} -> 0
                                                _         -> 1
