@@ -13,8 +13,8 @@ addons:
 # The different configurations we want to test. You could also do things like
 # change flags or use --stack-yaml to point to a different file.
 env:
-- ARGS="--resolver lts-2 --stack-yaml stack-lts-2.yaml"
-- ARGS="--resolver lts-3 --stack-yaml stack-lts-3.yaml"
+- ARGS="--stack-yaml stack-lts-2.yaml"
+- ARGS="--stack-yaml stack-lts-3.yaml"
 - ARGS="--resolver nightly"
 
 before_install:
@@ -26,7 +26,7 @@ before_install:
 # This line does all of the work: installs GHC if necessary, build the library,
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
-script: stack $ARGS --no-terminal --install-ghc test patches-vector:test-patches-vector --haddock
+script: stack $ARGS --no-terminal --install-ghc test patches-vector:doctest-patches-vector patches-vector:spec-patches-vector --haddock
 
 # Caching so the next build will be fast too.
 cache:
