@@ -15,35 +15,9 @@ import Data.Function
 import Control.Monad.ST
 -- $setup
 -- >>> import Test.QuickCheck
--- >>> :{
--- let
---   nonEmpty :: Vector a -> Bool
---   nonEmpty = (>0) . Vector.length
---   editsTo :: Arbitrary a => Vector a -> Gen (Edit a)
---   editsTo v = do
---     i <- choose (0, Vector.length v -1)
---     c <- elements [const (Insert i), \o _ -> Delete i o, Replace i]
---     x <- arbitrary
---     return $ c (v Vector.! i) x
---   patchesFrom' :: (Eq a, Arbitrary a) => Vector a -> Gen (Patch a)
---   patchesFrom' v | Vector.length v > 0 = fromList <$> listOf (editsTo v)
---   patchesFrom' _ | otherwise           = fromList <$> listOf (Insert 0 <$> arbitrary)
---   patchesFrom :: Vector Int -> Gen (Patch Int)
---   patchesFrom = patchesFrom'
---   divergingPatchesFrom :: Vector Int -> Gen (Patch Int, Patch Int)
---   divergingPatchesFrom v = (,) <$> patchesFrom v <*> patchesFrom v
---   historyFrom d 0 = return []
---   historyFrom d m = do
---     p <- patchesFrom d
---     r <- historyFrom (apply p d) $ m - 1
---     return (p:r)
--- :}
+-- >>> import Test.Util
 --
 -- >>> :set -XScopedTypeVariables
--- >>> instance Arbitrary a => Arbitrary (Vector a) where arbitrary = Vector.fromList <$> listOf arbitrary
---
--- Blah
---
 
 -- $doctest_sucks
 -- prop> forAll (patchesFrom d) $ \ x -> read (show x) == x
@@ -53,7 +27,7 @@ import Control.Monad.ST
 --   of 'Edit', and can be converted to and from raw lists of edits using 'toList' and 'fromList'
 --   respectively.
 --
---   Patches form a groupoid (a 'Monoid' with inverses, and a partial composition relation), 
+--   Patches form a groupoid (a 'Monoid' with inverses, and a partial composition relation),
 --   where the inverse element can be computed with 'inverse' and the groupoid operation
 --   is /composition/ of patches. Applying @p1 <> p2@ is the same as applying @p1@ /then/
 --   @p2@ (see 'apply'). This composition operator may produce structurally
@@ -70,7 +44,7 @@ import Control.Monad.ST
 --
 -- prop> forAll (historyFrom d 3) $ \[a, b, c] -> apply (a <> (b <> c)) d == apply ((a <> b) <> c) d
 --
--- The indices of the 'Edit' s are all based on the /original document/, so:
+-- The indices of the 'Edit' s of one 'Patch' are all based on the /original document/, so:
 --
 -- >>> Vector.toList $ apply (fromList [Insert 0 'a', Insert 1 'b']) (Vector.fromList "123")
 -- "a1b23"
@@ -199,11 +173,6 @@ instance Eq a => Monoid (Patch a) where
 
 -- | Returns true if a patch can be safely applied to a document, that is,
 --   @applicable p d@ holds when @d@ is a valid source document for the patch @p@.
---
--- prop> applicable mempty d
--- prop> forAll (patchesFrom d) $ \p -> applicable p d
--- prop> forAll (historyFrom d 2) $ \[p, q] -> applicable p d && applicable q (apply p d)
--- prop> forAll (historyFrom d 2) $ \[p, q] -> applicable (p <> q) d
 applicable :: (Eq a) => Patch a -> Vector a -> Bool
 applicable (Patch s) i = all applicable' s
   where
@@ -217,10 +186,6 @@ applicable (Patch s) i = all applicable' s
 
 -- | Returns true if a patch can be validly composed with another.
 --   That is, @composable p q@ holds if @q@ can be validly applied after @p@.
---
---   prop> forAll (patchesFrom d) $ \p -> composable mempty p
---   prop> forAll (patchesFrom d) $ \p -> composable p mempty
---   prop> forAll (historyFrom d 2) $ \[p, q] -> composable p q
 composable :: Eq a => Patch a -> Patch a -> Bool
 composable (Patch a) (Patch b) = go a b (0 :: Int)
     where
@@ -246,6 +211,8 @@ composable (Patch a) (Patch b) = go a b (0 :: Int)
 
 -- | Returns the delta of the document's size when a patch is applied.
 --   Essentially the number of @Insert@ minus the number of @Delete@.
+--
+-- prop> forAll (patchesFrom d) $ \ p -> sizeChange p == Data.Vector.length (apply p d) - Data.Vector.length d
 sizeChange :: Patch a -> Int
 sizeChange (Patch s) = foldr (\c d -> d + offset c) 0 s
   where offset (Delete {}) = -1
@@ -315,7 +282,7 @@ transformWith conflict (Patch p) (Patch q)
     go [] _ [] _ = ([],[])
     go xs a [] _ = (map (over index (+ a)) xs, [])
     go [] _ ys b = ([], map (over index (+ b)) ys)
-    go (x:xs) a (y:ys) b = 
+    go (x:xs) a (y:ys) b =
       case comparing (^. index) x y of
         LT -> over _1 (over index (+ a) x:) $ go xs a (y:ys) (b + offset x)
         GT -> over _2 (over index (+ b) y:) $ go (x:xs) (a + offset y) ys b
