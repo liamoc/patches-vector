@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                patches-vector
-version:             0.1.5.1
+version:             0.1.5.2
 synopsis:            Patches (diffs) on vectors: composable, mergeable, and invertible.
 description:         A patch is a collection of modifications (edits) to be made to a sequence of elements. Commonly
                      found in version control systems, patches are also a simple example of a groupoid, supporting (partial) composition
@@ -38,7 +38,7 @@ library
 test-suite             doctest-patches-vector
   type: exitcode-stdio-1.0
   main-is: doctest.hs
-  build-depends: base >= 4.7 && < 4.9, QuickCheck >= 2.7 && < 2.9, patches-vector, doctest >= 0.9 && < 0.11
+  build-depends: base >= 4.7 && < 4.9, QuickCheck >= 2.7 && < 2.9, patches-vector, doctest >= 0.9 && < 0.12
   default-language:    Haskell2010
 
 test-suite             benchmarks-patches-vector
@@ -46,6 +46,7 @@ test-suite             benchmarks-patches-vector
   main-is: benchmarks.hs
   hs-source-dirs: bm
   build-depends: base >= 4.7 && < 4.9, QuickCheck >= 2.7 && < 2.9, patches-vector, criterion >= 1.1 && < 1.2, vector >= 0.10 && <0.12
+  default-language:    Haskell2010
 
 test-suite             spec-patches-vector
   type: exitcode-stdio-1.0
@@ -55,3 +56,4 @@ test-suite             spec-patches-vector
                      , Test.Util
                      , Test.UtilSpec
   build-depends: base >= 4.7 && < 4.9, QuickCheck >= 2.7 && < 2.9, patches-vector, criterion >= 1.1 && < 1.2, vector >= 0.10 && <0.12, hspec >= 2.1 && < 2.3
+  default-language:    Haskell2010
