@@ -31,21 +31,30 @@ source-repository head
 library
   exposed-modules:     Data.Patch
                      , Data.Patch.Internal
-  build-depends:       base >=4.7 && <4.9, edit-distance-vector >=1.0 && <1.1, vector >= 0.10 && < 0.12
+  build-depends:       base >=4.7 && <5
+                     , edit-distance-vector >=1.0 && <1.1
+                     , vector >= 0.10 && < 0.12
                      , microlens >= 0.2 && < 0.5
   default-language:    Haskell2010
 
 test-suite             doctest-patches-vector
   type: exitcode-stdio-1.0
   main-is: doctest.hs
-  build-depends: base >= 4.7 && < 4.9, QuickCheck >= 2.7 && < 2.9, patches-vector, doctest >= 0.9 && < 0.12
+  build-depends:       base >= 4.7 && < 5
+                     , QuickCheck >= 2.7 && < 2.9
+                     , patches-vector
+                     , doctest >= 0.9 && < 0.12
   default-language:    Haskell2010
 
 test-suite             benchmarks-patches-vector
   type: exitcode-stdio-1.0
   main-is: benchmarks.hs
   hs-source-dirs: bm
-  build-depends: base >= 4.7 && < 4.9, QuickCheck >= 2.7 && < 2.9, patches-vector, criterion >= 1.1 && < 1.2, vector >= 0.10 && <0.12
+  build-depends:       base >= 4.7 && < 5
+                     , QuickCheck >= 2.7 && < 2.9
+                     , patches-vector
+                     , criterion >= 1.1 && < 1.2
+                     , vector >= 0.10 && <0.12
   default-language:    Haskell2010
 
 test-suite             spec-patches-vector
@@ -55,5 +64,10 @@ test-suite             spec-patches-vector
   other-modules:       Data.Patch.InternalSpec
                      , Test.Util
                      , Test.UtilSpec
-  build-depends: base >= 4.7 && < 4.9, QuickCheck >= 2.7 && < 2.9, patches-vector, criterion >= 1.1 && < 1.2, vector >= 0.10 && <0.12, hspec >= 2.1 && < 2.3
+  build-depends:       base >= 4.7 && < 5 
+                     , QuickCheck >= 2.7 && < 2.9
+                     , patches-vector
+                     , criterion >= 1.1 && < 1.2
+                     , vector >= 0.10 && <0.12
+                     , hspec >= 2.1 && < 2.3
   default-language:    Haskell2010
