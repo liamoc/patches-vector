@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                patches-vector
-version:             0.1.5.2
+version:             0.1.5.3
 synopsis:            Patches (diffs) on vectors: composable, mergeable, and invertible.
 description:         A patch is a collection of modifications (edits) to be made to a sequence of elements. Commonly
                      found in version control systems, patches are also a simple example of a groupoid, supporting (partial) composition
