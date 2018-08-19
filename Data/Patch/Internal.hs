@@ -1,7 +1,8 @@
 {-# LANGUAGE BangPatterns, Trustworthy #-}
 -- | For day-to-day use, please see "Data.Patch"
 module Data.Patch.Internal where
-import Data.Monoid
+import Data.Monoid hiding ((<>))
+import Data.Semigroup (Semigroup (..))
 import Data.Ord
 import qualified Data.List as List
 import qualified Data.Vector as Vector
@@ -145,9 +146,8 @@ normalise grp = let (inserts, deletes, replaces) = partition3 grp
         normalise' [] (d:_) _  = [d]
         normalise' _ _ _ = error "Impossible!"
 
-instance Eq a => Monoid (Patch a) where
-  mempty = Patch []
-  mappend (Patch a) (Patch b) = Patch $ merge a b (0 :: Int)
+instance Eq a => Semigroup (Patch a) where
+  (<>) (Patch a) (Patch b) = Patch $ merge a b (0 :: Int)
     where
       merge [] ys  off  = map (over index (+ off)) ys
       merge xs []  _    = xs
@@ -170,6 +170,10 @@ instance Eq a => Monoid (Patch a) where
       offset (Replace {}) = 0
       replace _ o n | o == n = id
       replace i o n | otherwise = (Replace i o n :)
+
+instance Eq a => Monoid (Patch a) where
+  mempty = Patch []
+  mappend = (<>)
 
 -- | Returns true if a patch can be safely applied to a document, that is,
 --   @applicable p d@ holds when @d@ is a valid source document for the patch @p@.
@@ -317,7 +321,7 @@ theirs :: a -> a -> a
 theirs = flip const
 
 -- | A convenience version of 'transformWith' which resolves conflicts using 'mappend'.
-transform :: (Eq a, Monoid a) => Patch a -> Patch a -> (Patch a, Patch a)
+transform :: (Eq a, Semigroup a) => Patch a -> Patch a -> (Patch a, Patch a)
 transform = transformWith (<>)
 
 -- | Compute the difference between two documents, using the Wagner-Fischer algorithm. O(mn) time and space.
